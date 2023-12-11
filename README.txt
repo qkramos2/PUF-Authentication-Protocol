@@ -1,14 +1,17 @@
 ------ PUF Implementation on an FPGA ------
 
--------------------------------------------
+----------------------------------------------------------------------
 RTL & Design (Hardware):
--------------------------------------------
+----------------------------------------------------------------------
 
-<Robbie Documentation on how the hybrid PUF cell works>
+Given an N-bit challenge, the arbiter-butterfly hybrid PUF would
+have an N number of hybrid PUF cells chained to produce a single
+bit of output. N number of chains would then needed to be created
+to achieve an N-bit output.
 
--------------------------------------------
+----------------------------------------------------------------------
 Authentication & Hashing (Sofwtare):
--------------------------------------------
+----------------------------------------------------------------------
 
 Before authentication, a 'crmap.txt' file is created which
 has all possible challenges that can be given to the FPGA.
@@ -31,5 +34,20 @@ Authentication protocol:
    - A random challenge is generated
    - Challenge gets sent to the PUF and the response is hashed
    - The response is compared to the 'crmap.txt' file output
-   - If they match the device is authorized (plays a game of tictactoe) <- got bored
-   - If they do not match, a prompt appears indicating impersonation
+   - If they match the device is authorized (plays a game of tictactoe) [ELIMINATED]
+   - If they do not match, a prompt appears indicating impersonation    [ELIMINATED]
+
+MILESTONE 2.1 UPDATE:
+
+Since the PUF was not designed to interface with the UART module given
+the time constraints of the project. The outputs of the PUF and their
+responses were recorded in a txt file. The FPGA would display the output
+via the builtin LED module on the Basys3 board. The hash function would
+then run on the responses based on the .txt files and the hashes of the
+2 PUF responses were compared. If the hashes were different than the
+designed PUF has a unique characteristic in which it's device specific.
+
+The one-way characteristic was not tested for, however the hash function
+allows the PUF responses to be irreversible after they are hashed. This
+functionality indirectly proves the one-way characteristic since the PUF
+input cannot be determined by the PUF output.

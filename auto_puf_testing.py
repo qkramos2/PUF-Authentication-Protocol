@@ -1,7 +1,7 @@
 """
 ========================================================================================
 File Name:
-    puf.py
+    auto_puf_testing.py
 
 File Description:
     Executes authentication module using the constructed FPGA arbiter PUF. The program
@@ -14,7 +14,6 @@ Author:
 """
 
 # --- Import statements ---
-import utility
 import qrhash
 import serial
 import time
@@ -124,23 +123,57 @@ else:
                     else : return False
         return False
 
+
 """
-Main program that attempts to check if a board is the authentic board
-if so a tictactoe game appears.
+Tests for reproducability
+"""
+def reproducibility_test():
+    # Test one way with hash and reproducbility:
+    challenge = next(challenge_generator())
+    ser = serial.Serial(com_port, baud_rate, timeout=1)
+    result_array = []
+    for i in range(100):
+        ser.write(bytes.fromhex(hex(challenge)[2:].zfill(2)))
+        hex_string = '0x'.join(f'{byte:02X}' for byte in ser.read(1))
+        result_array.append(qrhash.qrhash(int(hex_string, 16)))
+    if all(x == result_array[0] for x in result_array):
+        print("Successfully reproduced the same result 100 times!")
+    else:
+        print("The PUF results are not the same over 100 times!")
 
-inputs:
-    void
 
-outputs:
-    void
+"""
+Tests for uniqueness
+"""
+def unique_test():
+    # Unique Test:
+    challenge = next(challenge_generator())
+    ser = serial.Serial(com_port, baud_rate, timeout=1)
+    ser.write(bytes.fromhex(hex(challenge)[2:].zfill(2)))
+    hex_string = '0x'.join(f'{byte:02X}' for byte in ser.read(1))
+    result = qrhash.qrhash(int(hex_string, 16))
+
+    # If Auth_PUF.txt exists check if file exists:
+    fpath = Path(__file__).resolve().parent / "Auth_PUF.txt"
+    if fpath.exists():
+        with open(fpath,'r') as file:
+            line = file.readline().strip
+            if result == int(line):
+                print("PUF Results are different, PUF = Unique!")
+            else:
+                print("Ruh-Roh, these PUFs produced the same result!")
+    else:
+        with open(fpath,'w') as file:
+            file.write(result)
+
+
+"""
+Run the reproducibility test and uniqueness test
 """
 def main():
-    utility.authenticationFail()
-    #create_CRmap()
-    #if authenticate_user():
-    #    utility.startGame()
-    #else:
-    #    utility.authenticationFail()
+    reproducibility_test()
+    unique_test()
+
 
 if __name__ == '__main__':
     main()
